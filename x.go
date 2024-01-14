@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/dghubble/oauth1"
 	twitter "github.com/g8rswimmer/go-twitter/v2"
@@ -24,13 +25,14 @@ type MediaUpload struct {
 }
 
 type Stream struct {
-	Title    string `json:"title"`
-	Prompt   string `json:"prompt"`
-	Image    string `json:"image"`
-	MinMins  int    `json:"min_mins"`
-	MaxMins  int    `json:"max_mins"`
-	NextTime int64  `json:"next_time"`
-	Auth     Auth   `json:"auth"`
+	Title    string    `json:"title"`
+	Prompt   string    `json:"prompt"`
+	Image    string    `json:"image"`
+	MinMins  int       `json:"min_mins"`
+	MaxMins  int       `json:"max_mins"`
+	NextTime int64     `json:"next_time"`
+	Tags     *[]string `json:"tags"`
+	Auth     Auth      `json:"auth"`
 }
 
 type Auth struct {
@@ -43,6 +45,7 @@ type Auth struct {
 func (a authorize) Add(req *http.Request) {}
 
 func (s Stream) Send(text string, image string) {
+	message := fmt.Sprintf("%s%s", text, s.getHashTags())
 	oauth1Config := oauth1.NewConfig(s.Auth.ApiKey, s.Auth.ApiKeySecret)
 	twitterHttpClient := oauth1Config.Client(oauth1.NoContext, &oauth1.Token{
 		Token:       s.Auth.AccessToken,
@@ -67,7 +70,7 @@ func (s Stream) Send(text string, image string) {
 	}
 
 	req := twitter.CreateTweetRequest{
-		Text: text,
+		Text: message,
 	}
 
 	if image != "" {
@@ -78,6 +81,20 @@ func (s Stream) Send(text string, image string) {
 	if err != nil {
 		log.Panicf("create tweet error: %v", err)
 	}
+}
+
+func (s Stream) getHashTags() string {
+	if s.Tags == nil {
+		return ""
+	}
+
+	var tags []string
+
+	for _, tag := range *s.Tags {
+		tags = append(tags, fmt.Sprintf("#%s", tag))
+	}
+
+	return fmt.Sprintf("\n\n%s", strings.Join(tags, " "))
 }
 
 func uploadMedia(httpClient *http.Client, file string) (string, error) {
