@@ -27,9 +27,9 @@ jobs:
     - name: SCP deploy action
       uses: nogsantos/ssh-scp-deploy@v1.3.0
       with:
-        src: ./twitter_bot
+        src: ./twitter_writer
         host: ${{ secrets.SSH_HOST }}
-        remote: ${{ secrets.SSH_DIR }}/twitter_bot_new
+        remote: ${{ secrets.SSH_DIR }}/twitter_writer_new
         port: ${{ secrets.SSH_PORT }}
         user: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
